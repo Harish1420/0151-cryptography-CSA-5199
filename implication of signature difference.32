@@ -1,0 +1,68 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <openssl/dsa.h>
+#include <openssl/bn.h>
+
+void generateDSAKeyPair(DSA **dsa) {
+    *dsa = DSA_new();
+    if (*dsa == NULL) {
+        fprintf(stderr, "Error creating DSA structure\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (!DSA_generate_parameters_ex(*dsa, 1024, NULL, 0, NULL, NULL, NULL)) {
+        fprintf(stderr, "Error generating DSA parameters\n");
+        exit(EXIT_FAILURE);
+    }
+
+    if (!DSA_generate_key(*dsa)) {
+        fprintf(stderr, "Error generating DSA key pair\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void signAndVerify(DSA *dsa, const char *message) {
+    unsigned char hash[SHA_DIGEST_LENGTH];
+    DSA_SIG *signature;
+
+
+    SHA1((const unsigned char *)message, strlen(message), hash);
+
+    
+    signature = DSA_do_sign(hash, SHA_DIGEST_LENGTH, dsa);
+    if (signature == NULL) {
+        fprintf(stderr, "Error signing the message\n");
+        exit(EXIT_FAILURE);
+    }
+
+
+    if (DSA_do_verify(hash, SHA_DIGEST_LENGTH, signature, dsa) != 1) {
+        fprintf(stderr, "Signature verification failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Message: %s\n", message);
+    printf("Signature: %s\n", BN_bn2hex(signature->r));
+    printf("Verification: Success\n\n");
+
+    DSA_SIG_free(signature);
+}
+
+int main() {
+    DSA *dsa;
+    const char *message = "Hello, DSA!";
+
+
+    generateDSAKeyPair(&dsa);
+
+
+    for (int i = 1; i <= 3; i++) {
+        printf("Iteration %d:\n", i);
+        signAndVerify(dsa, message);
+    }
+
+    DSA_free(dsa);
+
+    return 0;
+}
