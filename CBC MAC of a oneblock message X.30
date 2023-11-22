@@ -1,0 +1,50 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <openssl/aes.h>
+
+void cbc_mac(const unsigned char *key, const unsigned char *message, size_t message_len, unsigned char *mac) {
+    AES_KEY aes_key;
+    unsigned char iv[AES_BLOCK_SIZE];
+
+
+    AES_set_encrypt_key(key, 128, &aes_key);
+    memset(iv, 0, AES_BLOCK_SIZE);
+
+
+    AES_cbc_encrypt(message, mac, AES_BLOCK_SIZE, &aes_key, iv, AES_ENCRYPT);
+}
+
+int main() {
+   
+    unsigned char key[AES_BLOCK_SIZE] = "0123456789ABCDEF";
+    unsigned char message[AES_BLOCK_SIZE] = "Hello123";
+
+    unsigned char mac[AES_BLOCK_SIZE];
+    cbc_mac(key, message, AES_BLOCK_SIZE, mac);
+
+
+    printf("CBC-MAC for one-block message:\n");
+    for (int i = 0; i < AES_BLOCK_SIZE; i++) {
+        printf("%02x", mac[i]);
+    }
+    printf("\n");
+
+    
+    unsigned char two_block_message[2 * AES_BLOCK_SIZE];
+    memcpy(two_block_message, message, AES_BLOCK_SIZE);
+    for (int i = 0; i < AES_BLOCK_SIZE; i++) {
+        two_block_message[AES_BLOCK_SIZE + i] = message[i] ^ mac[i];
+    }
+
+ 
+    cbc_mac(key, two_block_message, 2 * AES_BLOCK_SIZE, mac);
+
+    printf("CBC-MAC for two-block message:\n");
+    for (int i = 0; i < AES_BLOCK_SIZE; i++) {
+        printf("%02x", mac[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
