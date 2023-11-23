@@ -1,0 +1,40 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+void encryptVigenereOneTimePad(char *plaintext, int *key, char *ciphertext) {
+    int length = strlen(plaintext);
+    
+    for (int i = 0; i < length; i++) {
+        if (isalpha(plaintext[i])) {
+            int shift = key[i % strlen((char *)key)];
+
+            if (isupper(plaintext[i])) {
+                ciphertext[i] = (char)((plaintext[i] - 'A' + shift) % 26 + 'A');
+            } else {
+                ciphertext[i] = (char)((plaintext[i] - 'a' + shift) % 26 + 'a');
+            }
+        } else {
+            ciphertext[i] = plaintext[i];
+        }
+    }
+    ciphertext[length] = '\0';
+}
+
+int main() {
+    char plaintext[1000];
+    int key[1000];
+    char ciphertext[1000];
+    printf("Enter the plaintext: ");
+    fgets(plaintext, sizeof(plaintext), stdin);
+    plaintext[strcspn(plaintext, "\n")] = '\0'; // Remove newline character from input
+    printf("Enter the one-time pad key (space-separated integers between 0 and 26): ");
+    int keyLength = 0;
+    while (scanf("%d", &key[keyLength]) == 1) {
+        keyLength++;
+    }
+    encryptVigenereOneTimePad(plaintext, key, ciphertext);
+    printf("\nEncrypted Ciphertext: %s\n", ciphertext);
+
+    return 0;
+}
