@@ -1,0 +1,34 @@
+#include <stdio.h>
+#include <string.h>
+#include <openssl/aes.h>
+
+void pad_block(unsigned char* block, int size) {
+    block[size] = 0x80;
+    for (int i = size + 1; i < AES_BLOCK_SIZE; i++) {
+        block[i] = 0x00;
+    }
+}
+
+int main() {
+    AES_KEY key;
+    unsigned char user_key[AES_BLOCK_SIZE];
+    unsigned char block[AES_BLOCK_SIZE];
+    unsigned char encrypted_block[AES_BLOCK_SIZE];
+    printf("Enter a 16-character key: ");
+    fgets(user_key, sizeof(user_key), stdin);
+    AES_set_encrypt_key(user_key, 128, &key);
+    printf("Enter a string to encrypt (up to 16 characters): ");
+    fgets(block, sizeof(block), stdin);
+    int len = strlen(block);
+    if (len < AES_BLOCK_SIZE) {
+        pad_block(block, len);
+    }
+    AES_ecb_encrypt(block, encrypted_block, &key, AES_ENCRYPT);
+    printf("Encrypted block: ");
+    for (int i = 0; i < AES_BLOCK_SIZE; i++) {
+        printf("%02x", encrypted_block[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
